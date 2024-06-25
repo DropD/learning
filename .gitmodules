@@ -1,0 +1,7 @@
+[submodule "C++/linux-debugger/dependencies/linenoise"]
+	path = C++/linux-debugger/dependencies/linenoise
+	url = https://github.com/antirez/linenoise.git
+[submodule "C++/linux-debugger/dependencies/libelfin"]
+	path = C++/linux-debugger/dependencies/libelfin
+	url = https://github.com/TartanLlama/libelfin.git
+	branch = fbreg
