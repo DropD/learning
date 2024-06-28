@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% load wagtailcore_tags %}
+
+{% block body_class %}template-homepage{% endblock %}
+
+{% block extra_css %}
+
+{% endblock extra_css %}
+
+{% block content %}
+    <h1>
+        {{ page.title }}
+    </h1>
+    {% include_block page.body %}
+    <table>
+        <th><td>Weekday</td><td>Time</td><td>Location</td><td>Description</td></th>
+        {% for slot in page.slots.all %}
+        <tr>
+            <td>{{ slot.weekday }}</td>
+            <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
+            <td>{{ slot.location }}</td>
+            <td>{{ slot.description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock content %}
