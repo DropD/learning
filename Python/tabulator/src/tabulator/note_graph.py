@@ -3,7 +3,7 @@ import functools
 import itertools
 import pathlib
 import uuid
-from typing import Any, Optional, Self
+from typing import Any, Optional, Self, Iterator
 from tabulator import note_fragment
 
 
@@ -23,6 +23,12 @@ class Node:
     value: note_fragment.Note | note_fragment.Rest | Start | End
     next: Optional[Self] = None
 
+    def __iter__(self) -> Iterator[Self]:
+        current = self
+        while current:
+            yield current
+            current = current.next
+
 
 @dataclasses.dataclass
 class Builder:
@@ -32,10 +38,13 @@ class Builder:
 
     @visit.register
     def visit_fragment(self, obj: note_fragment.Fragment) -> Node:
-        nodes = [Node(value=Start())] + [self.visit_note(note) for note in obj.sequence]
+        nodes = (
+            [Node(value=Start())]
+            + [self.visit_note(note) for note in obj.sequence]
+            + [Node(value=End())]
+        )
         for cur, following in itertools.pairwise(nodes):
             cur.next = following
-        nodes[-1].next = Node(value=End())
         return nodes[0]
 
     @visit.register

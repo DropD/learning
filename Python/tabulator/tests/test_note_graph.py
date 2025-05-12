@@ -11,6 +11,6 @@ def fragment():
 
 def test_build_from_fragment(fragment):
     testee = note_graph.build_from_fragment(fragment)
-    assert isinstance(testee, note_graph.Start)
-    last = testee.next.next.next.next.next.next.next.next
-    assert isinstance(last, note_graph.End)
+    assert isinstance(testee.value, note_graph.Start)
+    last = list(iter(testee))[-1]
+    assert isinstance(last.value, note_graph.End)

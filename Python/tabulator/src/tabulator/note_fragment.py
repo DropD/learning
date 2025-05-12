@@ -40,7 +40,8 @@ def build_from_string(fragment_str: str) -> Fragment:
 
 def note_from_token(token: str) -> Note:
     parsed = re.match(
-        r"^(?P<basevalue>[abcdefgr])(?P<semistep>(is)|(es)|(s))?(?P<octave>('*)(,*))?(?P<duration>\d*)$", token
+        r"^(?P<basevalue>[abcdefgr])(?P<semistep>(is)|(es)|(s))?(?P<octave>('*)(,*))?(?P<duration>\d*)$",
+        token,
     )
     groups = parsed.groupdict()
     semistep = 0
@@ -57,6 +58,10 @@ def note_from_token(token: str) -> Note:
     if groups["basevalue"] == "r":
         return Rest(duration=int(groups["duration"]))
     return Note(
-        pitch=notes.Pitch.from_base_semi_octave(basenote=groups["basevalue"], semi=semistep, octave=octave),
-        duration=int(groups["duration"]),  # seconds for hardcoded tempo 120 # TODO: allow other tempi
+        pitch=notes.Pitch.from_base_semi_octave(
+            basenote=groups["basevalue"], semi=semistep, octave=octave
+        ),
+        duration=int(
+            groups["duration"]
+        ),  # seconds for hardcoded tempo 120 # TODO: allow other tempi
     )

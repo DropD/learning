@@ -81,7 +81,7 @@ class StyledNode(FingeredNode):
 
 @dataclasses.dataclass
 class NotesToFretted:
-    strings: tuple[notes.Pitch] = (
+    strings: tuple[notes.Pitch, ...] = (
         notes.Pitch.from_base_semi_octave("e", 0, 4),
         notes.Pitch.from_base_semi_octave("h", 0, 3),
         notes.Pitch.from_base_semi_octave("g", 0, 3),
@@ -103,7 +103,7 @@ class NotesToFretted:
         yield from new_nodes
 
     @visit.register
-    def visit(self, node: None) -> Iterator[Node]:
+    def visit_none(self, node: None) -> Iterator[Node]:
         yield from []
 
     @visit.register
@@ -117,8 +117,10 @@ class NotesToFretted:
     @visit.register
     def visit_note(self, node: note_fragment.Note) -> Iterator[Node]:
         for string in self.strings:
-            if node.pitch.value in range(string, string + self.max_frets):
-                yield FrettedNode(string=string, fret=node.pitch.value - string, next=[], prev=[])
+            if node.pitch.value in range(string.value, string.value + self.max_frets):
+                yield FrettedNode(
+                    string=string, fret=node.pitch.value - string, next=[], prev=[]
+                )
 
     @visit.register
     def visit_rest(self, node: note_fragment.Rest) -> Iterator[Node]:
