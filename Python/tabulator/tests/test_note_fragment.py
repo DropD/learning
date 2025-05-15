@@ -1,6 +1,6 @@
 import pytest
 
-from tabulator import note_fragment, notes
+from tabulator import note_fragment, notes, exceptions
 
 
 @pytest.mark.parametrize(
@@ -15,7 +15,22 @@ from tabulator import note_fragment, notes
 )
 def test_note_from_token(case):
     token, ref = case
-    assert note_fragment.note_from_token(token) == ref
+    assert note_fragment.note_from_token(note_fragment.Token.from_str(token)) == ref
+
+
+def test_note_from_token_unparseable():
+    with pytest.raises(exceptions.NoteParsingError):
+        note_fragment.note_from_token(note_fragment.Token.from_str("notanote"))
+
+
+def test_note_from_token_invalid_note():
+    with pytest.raises(exceptions.NoteParsingError):
+        note_fragment.note_from_token(note_fragment.Token.from_str("i4"))
+
+
+def test_note_from_token_bad_octave():
+    with pytest.raises(ValueError):
+        note_fragment.note_from_token(note_fragment.Token.from_str("a',4"))
 
 
 def test_build_from_string():

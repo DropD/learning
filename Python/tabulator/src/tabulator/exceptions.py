@@ -34,19 +34,21 @@ class NoteParsingError(SyntaxError):
         text = (
             text or f"Error parsing note at line {token.lineno}, column {token.offset}."
         )
-        filepath = pathlib.Path(token.filename)
-        lines = (
-            [text]
-            + textwrap.indent(filepath.read_text(), "  ").splitlines()[
-                (token.lineno - 1) : (token.end_lineno - 1)
-            ]
-            + [
-                "  "
-                + " " * (token.offset - 1)
-                + "^"
-                + "~" * (token.end_offset - token.offset - 1)
-            ]
-        )
+        lines = [text, textwrap.indent(token.value, "  ")]
+        if token.filename != "<string>":
+            filepath = pathlib.Path(token.filename)
+            lines = (
+                [text]
+                + textwrap.indent(filepath.read_text(), "  ").splitlines()[
+                    (token.lineno - 1) : (token.end_lineno - 1)
+                ]
+                + [
+                    "  "
+                    + " " * (token.offset - 1)
+                    + "^"
+                    + "~" * (token.end_offset - token.offset - 1)
+                ]
+            )
         return cls(
             "\n".join(lines),
             lineno=token.lineno,

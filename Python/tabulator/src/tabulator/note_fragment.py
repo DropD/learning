@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import dataclasses
 import pathlib
 import re
-from typing import Iterator
+from typing import Iterator, Self
 
-from tabulator import notes, execptions
+from tabulator import notes, exceptions
 
 
 @dataclasses.dataclass
@@ -36,6 +38,17 @@ class Token:
     offset: int
     end_offset: int
     filename: str
+
+    @classmethod
+    def from_str(cls, value: str) -> Self:
+        return cls(
+            value=value,
+            lineno=1,
+            end_lineno=2,
+            offset=1,
+            end_offset=len(value),
+            filename="<string>",
+        )
 
 
 def build_from_file(path: pathlib.Path) -> Fragment:
@@ -84,7 +97,7 @@ def note_from_token(token: Token) -> Note | Rest:
         token.value,
     )
     if parsed is None:
-        raise execptions.NoteParsingError.from_token(token)
+        raise exceptions.NoteParsingError.from_token(token)
     groups = parsed.groupdict()
     semistep = 0
     if parsed_semi := groups["semistep"]:
@@ -96,7 +109,7 @@ def note_from_token(token: Token) -> Note | Rest:
         elif chars == {","}:
             octave -= len(parsed_oct)
         else:
-            raise ValueError("Only \"'\" and '\"' are allowed as octave indicators.")
+            raise ValueError("Only \"'\" or '\"' are allowed as octave indicators.")
     if groups["basevalue"] == "r":
         return Rest(duration=int(groups["duration"]))
     return Note(
