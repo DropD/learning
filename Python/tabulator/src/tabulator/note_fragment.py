@@ -1,8 +1,9 @@
 import dataclasses
 import pathlib
 import re
+from typing import Iterator
 
-from tabulator import notes
+from tabulator import notes, execptions
 
 
 @dataclasses.dataclass
@@ -27,22 +28,63 @@ class Fragment:
     sequence: list[Note | Rest]
 
 
+@dataclasses.dataclass
+class Token:
+    value: str
+    lineno: int
+    end_lineno: int
+    offset: int
+    end_offset: int
+    filename: str
+
+
 def build_from_file(path: pathlib.Path) -> Fragment:
-    return build_from_string(path.read_text())
+    return Fragment(
+        [
+            note_from_token(token)
+            for token in tokenize(path.read_text(), filename=str(path.absolute()))
+        ]
+    )
+
+
+def tokenize(fragment_str: str, *, filename: str | None = None) -> Iterator[Token]:
+    lines = fragment_str.splitlines()
+    for lineno, line in enumerate(lines):
+        rest = line
+        offset = 0
+        while rest:
+            next_whitespace = re.search(r"\s", rest)
+            token_value = rest
+            offset_end = offset + len(rest)
+            next_start = len(rest)
+            if next_whitespace:
+                token_value = rest[: next_whitespace.start()]
+                offset_end = next_whitespace.start() + offset
+                next_start = next_whitespace.end()
+            rest = rest[next_start:]
+            if token_value:
+                yield Token(
+                    value=token_value,
+                    lineno=lineno + 1,
+                    end_lineno=lineno + 2,
+                    offset=offset,
+                    end_offset=offset_end,
+                    filename=filename or "<string>",
+                )
+            offset += next_start
 
 
 def build_from_string(fragment_str: str) -> Fragment:
-    fragment = Fragment([])
-    for token in fragment_str.split(" "):
-        fragment.sequence.append(note_from_token(token))
-    return fragment
+    return Fragment([note_from_token(token) for token in tokenize(fragment_str)])
 
 
-def note_from_token(token: str) -> Note:
+def note_from_token(token: Token) -> Note | Rest:
     parsed = re.match(
         r"^(?P<basevalue>[abcdefgr])(?P<semistep>(is)|(es)|(s))?(?P<octave>('*)(,*))?(?P<duration>\d*)$",
-        token,
+        token.value,
     )
+    if parsed is None:
+        raise execptions.NoteParsingError.from_token(token)
     groups = parsed.groupdict()
     semistep = 0
     if parsed_semi := groups["semistep"]:

@@ -24,11 +24,22 @@ class Pitch:
         return cls(12 * octave + NOTENAME_TO_VALUE[basenote.lower()] + semi)
 
     def __str__(self) -> str:
-        octave = self.value // 12 - 3
-        note_name = VALUE_TO_NOTE[self.value % 12]
+        octave = self.octave
+        note_name = self.note
         octave_str = ""
         if octave > 0:
             octave_str = "'" * octave
         elif octave < 0:
             octave_str = "," * (-octave)
         return f"{note_name}{octave_str}"
+
+    @property
+    def octave(self):
+        return self.value // 12 - 3
+
+    @property
+    def note(self):
+        return VALUE_TO_NOTE[self.value % 12]
+
+    def __sub__(self, other: Self) -> Self:
+        return self.__class__(self.value - other.value)
