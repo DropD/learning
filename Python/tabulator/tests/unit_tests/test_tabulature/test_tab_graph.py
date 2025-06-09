@@ -1,6 +1,7 @@
-from tabulator import tab_graph, note_graph
-
 import pytest
+
+from tabulator.notes import note_graph
+from tabulator.tabulature import tab_graph
 
 
 @pytest.fixture

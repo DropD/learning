@@ -3,8 +3,10 @@ import functools
 import itertools
 import pathlib
 import uuid
-from typing import Any, Optional, Self, Iterator
-from tabulator import note_fragment
+from collections.abc import Iterator
+from typing import Any, Self
+
+from tabulator.notes import note, note_sequence
 
 
 @dataclasses.dataclass
@@ -20,11 +22,11 @@ class End:
 @dataclasses.dataclass
 class Node:
     id: uuid.UUID = dataclasses.field(init=False, default_factory=uuid.uuid1)
-    value: note_fragment.Note | note_fragment.Rest | Start | End
-    next: Optional[Self] = None
+    value: note.Note | note.Rest | Start | End
+    next: Self | None = None
 
     def __iter__(self) -> Iterator[Self]:
-        current = self
+        current: Self | None = self
         while current:
             yield current
             current = current.next
@@ -34,31 +36,27 @@ class Node:
 class Builder:
     @functools.singledispatchmethod
     def visit(self, obj: Any) -> Node:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @visit.register
-    def visit_fragment(self, obj: note_fragment.Fragment) -> Node:
-        nodes = (
-            [Node(value=Start())]
-            + [self.visit_note(note) for note in obj.sequence]
-            + [Node(value=End())]
-        )
+    def visit_fragment(self, obj: note_sequence.Fragment) -> Node:
+        nodes = [Node(value=Start())] + [self.visit_note(note) for note in obj.sequence] + [Node(value=End())]
         for cur, following in itertools.pairwise(nodes):
             cur.next = following
         return nodes[0]
 
     @visit.register
-    def visit_note(self, obj: note_fragment.Note | note_fragment.Rest) -> Node:
+    def visit_note(self, obj: note.Note | note.Rest) -> Node:
         return Node(value=obj)
 
 
-def build_from_fragment(fragment: note_fragment.Fragment) -> Node:
+def build_from_fragment(fragment: note_sequence.Fragment) -> Node:
     return Builder().visit(fragment)
 
 
 def build_from_string(fragment_str: str) -> Node:
-    return build_from_fragment(note_fragment.build_from_string(fragment_str))
+    return build_from_fragment(note_sequence.build_from_string(fragment_str))
 
 
 def build_from_file(path: pathlib.Path) -> Node:
-    return build_from_fragment(note_fragment.build_from_file(path))
+    return build_from_fragment(note_sequence.build_from_file(path))

@@ -1,33 +1,21 @@
 from __future__ import annotations
 
 import dataclasses
-import pathlib
 import re
-from typing import Iterator, Self
+import typing
+from typing import Self
 
-from tabulator import notes, exceptions
+from tabulator import exceptions
+from tabulator.notes import note, pitch
 
-
-@dataclasses.dataclass
-class Note:
-    pitch: notes.Pitch
-    duration: int
-
-    def __str__(self) -> str:
-        return f"{self.pitch}{self.duration}"
-
-
-@dataclasses.dataclass
-class Rest:
-    duration: int
-
-    def __str__(self) -> str:
-        return f"r{self.duration}"
+if typing.TYPE_CHECKING:
+    import pathlib
+    from collections.abc import Iterator
 
 
 @dataclasses.dataclass
 class Fragment:
-    sequence: list[Note | Rest]
+    sequence: list[note.Note | note.Rest]
 
 
 @dataclasses.dataclass
@@ -52,12 +40,7 @@ class Token:
 
 
 def build_from_file(path: pathlib.Path) -> Fragment:
-    return Fragment(
-        [
-            note_from_token(token)
-            for token in tokenize(path.read_text(), filename=str(path.absolute()))
-        ]
-    )
+    return Fragment([note_from_token(token) for token in tokenize(path.read_text(), filename=str(path.absolute()))])
 
 
 def tokenize(fragment_str: str, *, filename: str | None = None) -> Iterator[Token]:
@@ -91,7 +74,7 @@ def build_from_string(fragment_str: str) -> Fragment:
     return Fragment([note_from_token(token) for token in tokenize(fragment_str)])
 
 
-def note_from_token(token: Token) -> Note | Rest:
+def note_from_token(token: Token) -> note.Note | note.Rest:
     parsed = re.match(
         r"^(?P<basevalue>[abcdefgr])(?P<semistep>(is)|(es)|(s))?(?P<octave>('*)(,*))?(?P<duration>\d*)$",
         token.value,
@@ -109,14 +92,11 @@ def note_from_token(token: Token) -> Note | Rest:
         elif chars == {","}:
             octave -= len(parsed_oct)
         else:
-            raise ValueError("Only \"'\" or '\"' are allowed as octave indicators.")
+            msg = "Only \"'\" or '\"' are allowed as octave indicators."
+            raise ValueError(msg)
     if groups["basevalue"] == "r":
-        return Rest(duration=int(groups["duration"]))
-    return Note(
-        pitch=notes.Pitch.from_base_semi_octave(
-            basenote=groups["basevalue"], semi=semistep, octave=octave
-        ),
-        duration=int(
-            groups["duration"]
-        ),  # seconds for hardcoded tempo 120 # TODO: allow other tempi
+        return note.Rest(duration=int(groups["duration"]))
+    return note.Note(
+        pitch=pitch.Pitch.from_base_semi_octave(basenote=groups["basevalue"], semi=semistep, octave=octave),
+        duration=int(groups["duration"]),  # seconds for hardcoded tempo 120 # TODO: allow other tempi
     )

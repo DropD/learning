@@ -1,12 +1,12 @@
 import pytest
 
-from tabulator import note_graph, note_fragment
+from tabulator.notes import note_graph, note_sequence
 
 
 @pytest.fixture
 def fragment():
     snippet = "b,,16 r16 b,,8 fis16 fis,16 f,16 e,16"
-    return note_fragment.build_from_string(snippet)
+    return note_sequence.build_from_string(snippet)
 
 
 def test_build_from_fragment(fragment):

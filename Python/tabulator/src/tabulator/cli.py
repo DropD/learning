@@ -1,7 +1,9 @@
-import click
 import pathlib
 
-from tabulator import note_graph, tab_graph
+import click
+
+from tabulator.notes import note_graph
+from tabulator.tabulature import tab_graph
 
 
 @click.command("tabulator")
@@ -12,5 +14,5 @@ from tabulator import note_graph, tab_graph
 def main(input_file: pathlib.Path):
     notes = note_graph.build_from_file(input_file)
     tabs = tab_graph.build_from_notes(notes)
-    click.echo(tab_graph.txt_tab_all(tabs))
+    tab_graph.txt_tab_echo_all(tabs)
     # click.echo(tab_graph.best_guess(tabs))

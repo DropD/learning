@@ -1,7 +1,6 @@
 import dataclasses
 from typing import Self
 
-
 NOTENAME_TO_VALUE: dict[str, int] = {
     "c": 0,
     "d": 2,
@@ -42,4 +41,5 @@ class Pitch:
         return VALUE_TO_NOTE[self.value % 12]
 
     def __sub__(self, other: Self) -> Self:
+        return self.__class__(self.value - other.value)
         return self.__class__(self.value - other.value)
